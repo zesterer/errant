@@ -2,6 +2,8 @@
 
 A (mostly) drop-in replacement for Rust's `Result` that provides backtrace support.
 
+*Please note that Errant is still very early in development and is not yet ready for general use.*
+
 ## Example
 
 Here's an example of errant being used to trace a runtime error.
