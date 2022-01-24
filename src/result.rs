@@ -1,6 +1,7 @@
 use super::*;
 use std::process::Termination;
 
+#[derive(Clone)]
 pub enum TrackedResult<T, E> {
     Ok(T),
     Err(E),
@@ -49,26 +50,20 @@ impl<T: fmt::Debug, E: fmt::Debug> fmt::Debug for TrackedResult<T, E> {
     }
 }
 
-impl<E: fmt::Debug> Termination for TrackedResult<(), E> {
+impl<E: Termination> Termination for TrackedResult<(), E> {
     fn report(self) -> i32 {
-        match &self {
+        match self {
             Self::Ok(()) => 0,
-            Self::Err(_) => {
-                print!("{:?}", self);
-                1
-            },
+            Self::Err(e) => e.report(),
         }
     }
 }
 
-impl<E: fmt::Debug> Termination for TrackedResult<!, E> {
+impl<E: Termination> Termination for TrackedResult<!, E> {
     fn report(self) -> i32 {
-        match &self {
-            Self::Ok(x) => *x,
-            Self::Err(_) => {
-                print!("{:?}", self);
-                1
-            },
+        match self {
+            Self::Ok(x) => x,
+            Self::Err(e) => e.report(),
         }
     }
 }

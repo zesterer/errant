@@ -2,6 +2,7 @@ use super::*;
 use std::{
     fs,
     path::PathBuf,
+    process::Termination,
 };
 
 pub struct Backtrace<E> {
@@ -89,5 +90,12 @@ impl<E: fmt::Debug> fmt::Debug for Backtrace<E> {
             .unwrap();
 
         write!(f, "{}", core::str::from_utf8(&buf).unwrap())
+    }
+}
+
+impl<E: fmt::Debug> Termination for Backtrace<E> {
+    fn report(self) -> i32 {
+        eprint!("{:?}", self);
+        1
     }
 }
