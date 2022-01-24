@@ -1,0 +1,10 @@
+[package]
+name = "errant"
+version = "0.0.0"
+edition = "2021"
+description = "A type-driven error handling crate with backtrace support"
+authors = ["Joshua Barretto <joshua.s.barretto@gmail.com>"]
+license = "Apache-2.0 AND MIT"
+
+[dependencies]
+ariadne = "0.1"
