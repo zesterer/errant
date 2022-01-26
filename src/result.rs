@@ -1,7 +1,7 @@
 use super::*;
 use std::process::Termination;
 
-#[derive(Clone)]
+#[derive(Copy, Clone)]
 pub enum TrackedResult<T, E> {
     Ok(T),
     Err(E),
