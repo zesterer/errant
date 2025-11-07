@@ -2,7 +2,7 @@ use super::*;
 use std::{
     fs,
     path::PathBuf,
-    process::Termination,
+    process::{ExitCode, Termination},
 };
 
 pub struct Backtrace<E> {
@@ -29,16 +29,22 @@ impl<E: fmt::Debug> Error for Backtrace<E> {
 
 impl<E: fmt::Debug> fmt::Debug for Backtrace<E> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        use ariadne::{Report, ReportKind, Label, Fmt, Color, Span};
+        use ariadne::{Color, Fmt, Label, Report, ReportKind, Span};
 
         #[derive(Copy, Clone)]
         struct MySpan(&'static str, usize, usize);
 
         impl Span for MySpan {
             type SourceId = &'static str;
-            fn source(&self) -> &Self::SourceId { &self.0 }
-            fn start(&self) -> usize { self.1 }
-            fn end(&self) -> usize { self.2 }
+            fn source(&self) -> &Self::SourceId {
+                &self.0
+            }
+            fn start(&self) -> usize {
+                self.1
+            }
+            fn end(&self) -> usize {
+                self.2
+            }
         }
 
         fn lineref_to_span(line: usize, col: usize, src: &str) -> Range<usize> {
@@ -61,7 +67,8 @@ impl<E: fmt::Debug> fmt::Debug for Backtrace<E> {
                 let mut path = PathBuf::from(DIR);
                 path.push(loc.file());
                 let text = fs::read_to_string(path).unwrap();
-                let Range { start, end } = lineref_to_span(loc.line() as usize, loc.column() as usize, &text);
+                let Range { start, end } =
+                    lineref_to_span(loc.line() as usize, loc.column() as usize, &text);
                 let span = MySpan(loc.file(), start, end);
                 let src = (loc.file(), text);
                 (span, src)
@@ -69,33 +76,29 @@ impl<E: fmt::Debug> fmt::Debug for Backtrace<E> {
             .unzip();
         let sources = ariadne::sources(sources);
 
-        let mut report = Report::<MySpan>::build(ReportKind::Error, self.loc.file(), 0)
+        let mut report = Report::<MySpan>::build(ReportKind::Error, spans[0])
             .with_message(format!("{:?}", self.err))
             .with_label(Label::new(spans[0]).with_message("Error encountered here".fg(Color::Red)));
 
         for (i, span) in spans.iter().enumerate().skip(1) {
-            report = report
-                .with_label(Label::new(*span).with_message(format!(
-                    "({}) {}",
-                    i.fg(Color::Red),
-                    "Then propagated here".fg(Color::Yellow),
-                )));
+            report = report.with_label(Label::new(*span).with_message(format!(
+                "({}) {}",
+                i.fg(Color::Red),
+                "Then propagated here".fg(Color::Yellow),
+            )));
         }
 
         let mut buf = Vec::new();
 
-        report
-            .finish()
-            .write(sources, &mut buf)
-            .unwrap();
+        report.finish().write(sources, &mut buf).unwrap();
 
         write!(f, "{}", core::str::from_utf8(&buf).unwrap())
     }
 }
 
 impl<E: fmt::Debug> Termination for Backtrace<E> {
-    fn report(self) -> i32 {
+    fn report(self) -> ExitCode {
         eprint!("{:?}", self);
-        1
+        1.into()
     }
 }

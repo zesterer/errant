@@ -1,5 +1,5 @@
 use super::*;
-use std::process::Termination;
+use std::process::{ExitCode, Termination};
 
 #[derive(Copy, Clone)]
 pub enum TrackedResult<T, E> {
@@ -27,7 +27,7 @@ impl<T, E: Error> Try for TrackedResult<T, E> {
             Self::Err(mut e) => {
                 e.handle_try(Location::caller());
                 ControlFlow::Break(TrackedResult::Err(e))
-            },
+            }
         }
     }
 }
@@ -51,16 +51,16 @@ impl<T: fmt::Debug, E: fmt::Debug> fmt::Debug for TrackedResult<T, E> {
 }
 
 impl<E: Termination> Termination for TrackedResult<(), E> {
-    fn report(self) -> i32 {
+    fn report(self) -> ExitCode {
         match self {
-            Self::Ok(()) => 0,
+            Self::Ok(()) => 0.into(),
             Self::Err(e) => e.report(),
         }
     }
 }
 
 impl<E: Termination> Termination for TrackedResult<!, E> {
-    fn report(self) -> i32 {
+    fn report(self) -> ExitCode {
         match self {
             Self::Ok(x) => x,
             Self::Err(e) => e.report(),

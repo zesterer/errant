@@ -7,4 +7,4 @@ authors = ["Joshua Barretto <joshua.s.barretto@gmail.com>"]
 license = "Apache-2.0 AND MIT"
 
 [dependencies]
-ariadne = "0.1"
+ariadne = "0.6"
